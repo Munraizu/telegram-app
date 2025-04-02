@@ -165,7 +165,7 @@ async function fetchAndParseSheet() {
 
 // --- Функция фильтрации данных (на клиенте) ---
 function filterApartments(city, maxRent) {
-    console.log(`Фильтрация: город="${city}", макс. аренда=${maxRent}`);
+    console.log(`Фильтрация: Город="${city}", макс. аренда=${maxRent}`);
     if (!apartmentsData || apartmentsData.length === 0) {
         console.log("Нет данных для фильтрации.");
         return [];

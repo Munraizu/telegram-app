@@ -46,55 +46,56 @@
         <div class="carousel"></div>
     </div>
 
-    <script>
-        const searchButton = document.getElementById('search');
-        const resultsDiv = document.getElementById('results');
-        const carouselDiv = document.querySelector('.carousel');
+   <script>
+    const searchButton = document.getElementById('search');
+    const resultsDiv = document.getElementById('results');
+    const carouselDiv = document.querySelector('.carousel');
 
-        searchButton.addEventListener('click', () => {
-            const city = document.getElementById('city').value;
-            const rent = parseInt(document.getElementById('rent').value);
+    searchButton.addEventListener('click', () => {
+        const city = document.getElementById('city').value;
+        const rent = parseInt(document.getElementById('rent').value);
 
-            // Замените YOUR_GOOGLE_SHEET_URL на ссылку на вашу таблицу
-            const sheetUrl = 'YOUR_GOOGLE_SHEET_URL';
+        // Замените YOUR_GOOGLE_SHEET_URL на ссылку на вашу таблицу
+        const sheetUrl = 'YOUR_GOOGLE_SHEET_URL';
 
-            fetch(sheetUrl)
-                .then(response => response.text())
-                .then(data => {
-                    const rows = data.split('\n');
-                    let apartments = [];
-                    for (let i = 1; i < rows.length; i++) {
-                        const row = rows[i].split('\t');
-                        if (row[0] === city && parseInt(row[1]) >= rent) {
-                            apartments.push({
-                                name: row[3],
-                                mortgage: row[4],
-                                price: row[5],
-                                image: row[6]
-                            });
-                        }
-                    }
-
-                    if (apartments.length > 0) {
-                        resultsDiv.classList.remove('hidden');
-                        carouselDiv.innerHTML = '';
-                        apartments.forEach(apartment => {
-                            const item = document.createElement('div');
-                            item.classList.add('carousel-item');
-                            item.innerHTML = `
-                                <h3>${apartment.name}</h3>
-                                <p>Ипотека: ${apartment.mortgage}</p>
-                                <p>Цена: ${apartment.price}</p>
-                                <img src="${apartment.image}" alt="${apartment.name}" style="max-width: 100%;">
-                            `;
-                            carouselDiv.appendChild(item);
+        fetch(sheetUrl)
+            .then(response => response.text())
+            .then(data => {
+                const rows = data.split('\n');
+                let apartments = [];
+                for (let i = 1; i < rows.length; i++) {
+                    const row = rows[i].split('\t');
+                    // Исправлено условие сравнения:
+                    if (row[0] === city && parseInt(row[1]) <= rent) { 
+                        apartments.push({
+                            name: row[3],
+                            mortgage: row[1], // Используем ежемесячный платеж из таблицы
+                            price: row[4],
+                            image: row[2]
                         });
-                    } else {
-                        resultsDiv.classList.remove('hidden');
-                        carouselDiv.innerHTML = '<p>Квартиры не найдены</p>';
                     }
-                });
-        });
-    </script>
+                }
+
+                if (apartments.length > 0) {
+                    resultsDiv.classList.remove('hidden');
+                    carouselDiv.innerHTML = '';
+                    apartments.forEach(apartment => {
+                        const item = document.createElement('div');
+                        item.classList.add('carousel-item');
+                        item.innerHTML = `
+                            <h3>${apartment.name}</h3>
+                            <p>Ипотека: ${apartment.mortgage}</p>
+                            <p>Цена: ${apartment.price}</p>
+                            <img src="${apartment.image}" alt="${apartment.name}" style="max-width: 100%;">
+                        `;
+                        carouselDiv.appendChild(item);
+                    });
+                } else {
+                    resultsDiv.classList.remove('hidden');
+                    carouselDiv.innerHTML = '<p>Квартиры не найдены</p>';
+                }
+            });
+    });
+</script>
 </body>
 </html>

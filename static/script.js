@@ -9,7 +9,7 @@ const COLUMNS = {
     IMAGE_URL: 'Ссылка на изображение',
     TITLE: 'Название',
     PRICE: 'Цена',
-    CITY: 'город'
+    CITY: 'Город'
 };
 
 // Инициализация Web App

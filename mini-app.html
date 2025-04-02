@@ -12,6 +12,22 @@
             padding: 8px;
             font-size: 16px;
         }
+        .carousel {
+            display: flex;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            width: 100%;
+        }
+        .carousel-item {
+            flex: 0 0 100%;
+            scroll-snap-align: start;
+            padding: 20px;
+            border: 1px solid #ddd;
+            margin: 10px;
+        }
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -25,31 +41,58 @@
     <label for="rent">Сумма аренды:</label>
     <input type="number" id="rent"><br>
     <button id="search">Показать квартиры</button>
-    <div id="results"></div>
+    <div id="results" class="hidden">
+        <h2>Результаты поиска</h2>
+        <div class="carousel"></div>
+    </div>
 
     <script>
         const searchButton = document.getElementById('search');
         const resultsDiv = document.getElementById('results');
+        const carouselDiv = document.querySelector('.carousel');
 
         searchButton.addEventListener('click', () => {
             const city = document.getElementById('city').value;
             const rent = parseInt(document.getElementById('rent').value);
 
             // Замените YOUR_GOOGLE_SHEET_URL на ссылку на вашу таблицу
-            const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRzFm-I4hL8tKOSXOsW-yeg4N2-WJfA9aLBXfxf4pF6pvGQFPbnj1fTztVWTQVkS9q-seBCXLMx07Z9/pub?output=tsv';
+            const sheetUrl = 'YOUR_GOOGLE_SHEET_URL';
 
             fetch(sheetUrl)
                 .then(response => response.text())
                 .then(data => {
                     const rows = data.split('\n');
-                    let results = '';
+                    let apartments = [];
                     for (let i = 1; i < rows.length; i++) {
                         const row = rows[i].split('\t');
                         if (row[0] === city && parseInt(row[1]) >= rent) {
-                            results += `<a href="${row[2]}">Квартира ${i}</a><br>`;
+                            apartments.push({
+                                name: row[3],
+                                mortgage: row[4],
+                                price: row[5],
+                                image: row[6]
+                            });
                         }
                     }
-                    resultsDiv.innerHTML = results || 'Квартиры не найдены';
+
+                    if (apartments.length > 0) {
+                        resultsDiv.classList.remove('hidden');
+                        carouselDiv.innerHTML = '';
+                        apartments.forEach(apartment => {
+                            const item = document.createElement('div');
+                            item.classList.add('carousel-item');
+                            item.innerHTML = `
+                                <h3>${apartment.name}</h3>
+                                <p>Ипотека: ${apartment.mortgage}</p>
+                                <p>Цена: ${apartment.price}</p>
+                                <img src="${apartment.image}" alt="${apartment.name}" style="max-width: 100%;">
+                            `;
+                            carouselDiv.appendChild(item);
+                        });
+                    } else {
+                        resultsDiv.classList.remove('hidden');
+                        carouselDiv.innerHTML = '<p>Квартиры не найдены</p>';
+                    }
                 });
         });
     </script>

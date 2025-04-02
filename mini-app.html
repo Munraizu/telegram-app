@@ -65,11 +65,11 @@
                 let apartments = [];
                 for (let i = 1; i < rows.length; i++) {
                     const row = rows[i].split('\t');
-                    // Исправлено условие сравнения города:
-                    if (row[5] === city && parseInt(row[0]) <= rent) { 
+                    // Исправлено: преобразование в число и регистр города
+                    if (row[5].toLowerCase() === city.toLowerCase() && parseInt(row[0]) <= rent) { 
                         apartments.push({
                             name: row[2],
-                            mortgage: row[0], // Используем ежемесячный платеж из таблицы
+                            mortgage: row[0],
                             price: row[3],
                             image: row[1]
                         });

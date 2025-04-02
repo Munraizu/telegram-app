@@ -5,10 +5,10 @@ const GOOGLE_SHEET_TSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR
 
 // Предполагаемые имена столбцов (как в вашей таблице) - ВАЖНО: проверьте их!
 const COLUMNS = {
-    PAYMENT: 'ежемесячный платеж',
-    IMAGE_URL: 'ссылка на изображение',
-    TITLE: 'название',
-    PRICE: 'цена',
+    PAYMENT: 'Ежемесячный платеж',
+    IMAGE_URL: 'Ссылка на изображение',
+    TITLE: 'Название',
+    PRICE: 'Цена',
     CITY: 'город'
 };
 

@@ -230,7 +230,7 @@ function displayApartments(apartments) {
         // Дисклеймер
         const disclaimer = document.createElement('p');
         disclaimer.className = 'disclaimer';
-        disclaimer.innerHTML = 'Для получения актуальной информации<br>по предложениям зайдите на <a href="https://pik.ru" target="_blank" rel="noopener noreferrer">pik.ru</a>.';
+        disclaimer.innerHTML = 'Для получения актуальной информации<br>по предложениям зайдите на <a href="https://ugmkstroy.ru" target="_blank" rel="noopener noreferrer">ugmkstroy.ru</a>.';
         card.appendChild(disclaimer);
 
         // Кнопка "Хочу тут жить" (внешняя ссылка)

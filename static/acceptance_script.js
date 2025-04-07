@@ -236,47 +236,46 @@ function showCompletionScreen() {
 }
 
 
-/** Отправляет ТЕСТОВУЮ СТРОКУ боту БЕЗ закрытия окна */
+/** Отправляет список дефектов боту и пытается закрыть Mini App */
 function submitResults() {
     console.log("--- Вызвана функция submitResults ---");
 
-    // 1. Проверяем наличие Telegram API
-    if (!window.Telegram || !window.Telegram.WebApp) {
-        console.error("Критическая ошибка: объект window.Telegram.WebApp не найден!");
-        alert("Ошибка: Не удается получить доступ к API Telegram. Убедитесь, что приложение запущено из Telegram.");
-        return; // Прерываем выполнение
+    if (!tg || typeof tg.sendData !== 'function') {
+        console.error("Критическая ошибка: объект window.Telegram.WebApp или метод sendData не найден!");
+        alert("Ошибка: Не удается связаться с API Telegram.");
+        return;
     }
-    const tg = window.Telegram.WebApp;
-    console.log("Объект tg найден:", tg); // Выводим сам объект
+    console.log("Объект tg найден, метод sendData доступен.");
 
-    // 2. Проверяем наличие метода sendData
-    if (typeof tg.sendData !== 'function') {
-        console.error("Критическая ошибка: метод tg.sendData не является функцией!");
-        alert("Ошибка: Метод отправки данных недоступен в текущей версии API.");
-        return; // Прерываем выполнение
+    const dataToSend = {
+        action: 'submit_acceptance',
+        defects: defectsList
+    };
+
+    let dataJsonString = '';
+    try {
+        dataJsonString = JSON.stringify(dataToSend);
+        console.log('Данные для отправки (JSON):', dataJsonString);
+        if (dataJsonString.length > 4000) {
+             console.warn("Внимание: Размер отправляемых данных близок к лимиту Telegram.");
+        }
+    } catch (stringifyError) {
+        console.error("Ошибка при преобразовании данных в JSON:", stringifyError, dataToSend);
+        alert("Ошибка подготовки данных для отправки.");
+        return;
     }
-    console.log("Метод tg.sendData найден.");
-
-    // 3. Формируем уникальную тестовую строку
-    const testString = "MINIAPP_DATA_SENT_" + Date.now(); // Добавляем время для уникальности
 
     try {
-        // 4. Пытаемся отправить тестовую строку
-        console.log("Попытка отправить тестовую строку:", testString);
-        tg.sendData(testString);
-        // Если мы дошли сюда, вызов sendData прошел без немедленной ошибки JS
-        console.log("Команда tg.sendData(testString) выполнена (без немедленной ошибки).");
-
-        // !!! ВАЖНО: Мы НЕ вызываем tg.close() в этом тесте !!!
-        // Это позволит увидеть, доходит ли sendData сама по себе.
-
-        // Сообщаем пользователю, что попытка была сделана
-        alert("Попытка отправить данные выполнена. Пожалуйста, проверьте чат с ботом. Окно НЕ будет закрыто автоматически в этом тесте.");
-
+        console.log("Попытка отправить JSON:", dataJsonString);
+        tg.sendData(dataJsonString);
+        console.log("sendData вызвана. Попытка явного закрытия tg.close()...");
+        tg.close(); // Возвращаем закрытие окна
     } catch (error) {
-        // Ловим ошибки, которые могли возникнуть при вызове sendData
-        console.error("!!! Ошибка непосредственно при вызове tg.sendData:", error);
-        alert("Произошла ошибка JavaScript при попытке отправить данные: " + error.message);
+        console.error("Ошибка при вызове tg.sendData или tg.close:", error);
+        // Не показываем alert при ошибке close, если sendData могла пройти
+        if (!error.message || !error.message.toLowerCase().includes("close")) {
+             alert("Не удалось отправить результаты. Возможно, вы используете приложение не через Telegram?");
+        }
     }
     console.log("--- Функция submitResults завершена ---");
 }

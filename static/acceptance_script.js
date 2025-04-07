@@ -237,50 +237,19 @@ function showCompletionScreen() {
 
 
 /** Отправляет список дефектов боту и пытается закрыть Mini App */
+/** Отправляет ТЕСТОВУЮ СТРОКУ боту и пытается закрыть Mini App */
 function submitResults() {
-    console.log("Функция submitResults вызвана."); // Убедимся, что функция вызывается
-
-    // Проверяем наличие объекта tg и метода sendData перед использованием
-    if (!tg || typeof tg.sendData !== 'function') {
-        console.error("Объект tg или метод tg.sendData недоступен!");
-        alert("Ошибка: Не удается связаться с Telegram API. Попробуйте перезапустить.");
-        return; // Прерываем выполнение
-    }
-
-    console.log("Объект tg найден, метод sendData доступен.");
-    const dataToSend = {
-        action: 'submit_acceptance', // Идентификатор для бота
-        defects: defectsList // Массив собранных дефектов
-    };
-
-    let dataJsonString = '';
+    console.log("Attempting to send simple test data...");
     try {
-        dataJsonString = JSON.stringify(dataToSend);
-        console.log('Данные для отправки (JSON):', dataJsonString); // Выводим строку JSON
-        // Проверка на слишком большие данные (лимит Telegram около 4096 байт)
-        if (dataJsonString.length > 4000) {
-             console.warn("Внимание: Размер отправляемых данных близок к лимиту Telegram.");
-        }
-    } catch (stringifyError) {
-        console.error("Ошибка при преобразовании данных в JSON:", stringifyError, dataToSend);
-        alert("Ошибка подготовки данных для отправки.");
-        return; // Прерываем выполнение
-    }
-
-    try {
-        // Отправляем данные боту
-        tg.sendData(dataJsonString);
-        // sendData ДОЛЖНА автоматически закрывать Mini App.
-        // Добавляем явный вызов close() на случай, если в какой-то среде это не сработает.
-        console.log("sendData вызвана. Попытка явного закрытия tg.close()...");
-        tg.close(); // Явный вызов закрытия
+        // ОТПРАВЛЯЕМ ПРОСТУЮ СТРОКУ ДЛЯ ТЕСТА
+        const testDataString = "TEST_DATA_FROM_ACCEPTANCE_APP_123";
+        console.log("Sending test string:", testDataString);
+        tg.sendData(testDataString);
+        console.log("sendData('TEST_DATA...') called. Attempting close...");
+        tg.close();
     } catch (error) {
-        console.error("Ошибка при вызове tg.sendData или tg.close:", error);
-        // Показываем alert только если ошибка не связана с методом close,
-        // т.к. ошибка close после успешной sendData может быть нормальной в некоторых клиентах.
-        if (!error.message || !error.message.toLowerCase().includes("close")) {
-             alert("Не удалось отправить результаты. Возможно, вы используете приложение не через Telegram?");
-        }
+        console.error("Error during simple sendData/close:", error);
+        alert("Failed to send simple test data.");
     }
 }
 

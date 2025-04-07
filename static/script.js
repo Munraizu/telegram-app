@@ -31,28 +31,164 @@ const noResultsMessage = document.getElementById('no-results-message');
 let apartmentsData = []; // Массив для хранения данных из таблицы
 let currentSlide = 0;    // Индекс текущего слайда
 
-// --- Функция переключения слайдов (остается похожей) ---
+// --- Функция переключения слайдов (обновленная) ---
 function showSlide(index) {
     const slides = resultsContainer.querySelectorAll('.apartment-card');
     if (!slides || slides.length === 0) return;
 
-    // Обеспечиваем зацикливание или остановку на последнем слайде
-    // В дизайне нет кнопки "Назад", поэтому просто идем вперед.
-    // Если нужно зацикливание: index = index % slides.length;
-    // Если нужно остановиться: index = Math.min(index, slides.length - 1);
-    // Выберем остановку на последнем:
+    // Обеспечиваем границы: не уходим меньше 0 и не больше последнего индекса
     index = Math.max(0, Math.min(index, slides.length - 1));
 
     slides.forEach((slide, i) => {
-        slide.classList.toggle('active', i === index);
-        // Обновляем состояние кнопки "Следующая" на активном слайде
-        const nextButton = slide.querySelector('.next-button');
-        if (nextButton) {
-            nextButton.disabled = (i === slides.length - 1); // Деактивируем на последнем
+        const isActive = (i === index);
+        slide.classList.toggle('active', isActive);
+
+        // Обновляем состояние кнопок только на активном слайде
+        if (isActive) {
+            const prevButton = slide.querySelector('.prev-button');
+            const nextButton = slide.querySelector('.next-button');
+            if (prevButton) {
+                prevButton.disabled = (index === 0); // Деактивируем "Назад" на первом слайде
+            }
+            if (nextButton) {
+                nextButton.disabled = (index === slides.length - 1); // Деактивируем "Вперед" на последнем
+            }
         }
     });
     currentSlide = index;
 }
+
+
+// --- НОВАЯ Функция отображения квартир (с изменениями в конце) ---
+function displayApartments(apartments) {
+    resultsContainer.innerHTML = ''; // Очищаем старые результаты
+
+    if (apartments.length === 0) {
+        noResultsMessage.style.display = 'block';
+        loadingMessage.style.display = 'none';
+        return;
+    }
+
+    noResultsMessage.style.display = 'none';
+    loadingMessage.style.display = 'none';
+
+    apartments.forEach((apt, index) => {
+        const card = document.createElement('div');
+        card.className = 'apartment-card'; // Будет скрыт CSS по умолчанию
+        card.dataset.index = index;
+
+        // --- (Код для изображения, заголовка, цены, деталей, дисклеймера - без изменений) ---
+        // 1. Изображение (если есть)
+        if (apt.imageUrl) {
+            const img = document.createElement('img');
+            img.src = apt.imageUrl;
+            img.alt = apt.title;
+            img.onerror = () => { img.style.display = 'none'; };
+            card.appendChild(img);
+        }
+        // 2. Заголовок
+        const title = document.createElement('h3');
+        title.className = 'apartment-title';
+        title.textContent = apt.title;
+        card.appendChild(title);
+        // 3. Цена
+        const priceP = document.createElement('p');
+        priceP.className = 'apartment-price';
+        const priceValue = typeof apt.price === 'number'
+             ? `от ${Math.round(apt.price).toLocaleString('ru-RU')} ₽`
+             : apt.price;
+        priceP.textContent = priceValue;
+        card.appendChild(priceP);
+        // 4. Блок с деталями
+        const detailsDiv = document.createElement('div');
+        detailsDiv.className = 'details-section';
+        // 4.1 Программа
+        const programRow = document.createElement('div');
+        programRow.className = 'detail-row';
+        programRow.innerHTML = `<span class="icon">📋</span><span class="label">Программа</span><span class="value">${apt.program}</span>`;
+        detailsDiv.appendChild(programRow);
+        // 4.2 Ставка
+        const rateRow = document.createElement('div');
+        rateRow.className = 'detail-row';
+        rateRow.innerHTML = `<span class="icon">%</span><span class="label">Ставка</span><span class="value">${apt.rate}</span>`;
+        detailsDiv.appendChild(rateRow);
+        // 4.3 Ежемесячный платеж
+        const paymentRow = document.createElement('div');
+        paymentRow.className = 'detail-row';
+        const paymentValue = apt.payment ? `${Math.round(apt.payment).toLocaleString('ru-RU')} ₽` : 'не указан';
+        paymentRow.innerHTML = `<span class="icon">💰</span><span class="label">Ежемесячный платёж</span><span class="value">${paymentValue}</span>`;
+        detailsDiv.appendChild(paymentRow);
+        card.appendChild(detailsDiv);
+        // 5. Дисклеймер
+        const disclaimer = document.createElement('p');
+        disclaimer.className = 'disclaimer';
+        disclaimer.innerHTML = 'Для получения актуальной информации<br>по предложениям зайдите на <a href="https://pik.ru" target="_blank">pik.ru</a>.';
+        card.appendChild(disclaimer);
+        // --- (Конец неизмененной части) ---
+
+
+        // 6. Кнопка "Хочу тут жить" (ссылка)
+        if (apt.link) {
+            const actionLink = document.createElement('a');
+            actionLink.className = 'main-action-button';
+            actionLink.href = apt.link;
+            actionLink.target = '_blank';
+            actionLink.textContent = 'Хочу тут жить';
+            card.appendChild(actionLink);
+        } else {
+            // Оставляем немного места, если кнопки нет
+             const placeholderDiv = document.createElement('div');
+             placeholderDiv.style.height = '46px'; // Примерная высота кнопки
+             placeholderDiv.style.marginTop = '15px';
+             card.appendChild(placeholderDiv);
+        }
+
+        // --- ИЗМЕНЕНИЕ: Контейнер для кнопок навигации ---
+        const navigationDiv = document.createElement('div');
+        navigationDiv.className = 'navigation-buttons'; // Новый класс для контейнера
+
+        // 7. Кнопка "Назад" (НОВАЯ)
+        const prevButton = document.createElement('button');
+        prevButton.className = 'prev-button navigation-button'; // Добавляем общий класс
+        prevButton.textContent = '⬅️ Назад'; // Или просто "Назад"
+        prevButton.onclick = () => {
+            showSlide(currentSlide - 1);
+        };
+        // Начальное состояние - неактивна, если это первая карточка
+        if (index === 0) {
+            prevButton.disabled = true;
+        }
+        navigationDiv.appendChild(prevButton); // Добавляем в контейнер
+
+        // 8. Кнопка "Следующая квартира" (теперь тоже в контейнере)
+        const nextButton = document.createElement('button');
+        // Убираем старый класс 'next-button', используем общий и модификатор
+        nextButton.className = 'next-button navigation-button'; // Добавляем общий класс
+        nextButton.textContent = 'Далее ➡️'; // Или "Следующая квартира"
+        nextButton.onclick = () => {
+             showSlide(currentSlide + 1);
+        };
+        // Начальное состояние - неактивна, если это последняя карточка
+        if (index === apartments.length - 1) {
+             nextButton.disabled = true;
+        }
+        navigationDiv.appendChild(nextButton); // Добавляем в контейнер
+
+        // Добавляем контейнер с кнопками навигации в карточку
+        card.appendChild(navigationDiv);
+        // --- КОНЕЦ ИЗМЕНЕНИЯ ---
+
+
+        // Добавляем готовую карточку в контейнер
+        resultsContainer.appendChild(card);
+    });
+
+    // Показываем первый слайд, если есть результаты
+    if (apartments.length > 0) {
+        showSlide(0);
+    }
+}
+
 
 // --- Обновленная функция загрузки и парсинга TSV ---
 async function fetchAndParseSheet() {

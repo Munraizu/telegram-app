@@ -236,52 +236,49 @@ function showCompletionScreen() {
 }
 
 
-/** Отправляет список дефектов боту и пытается закрыть Mini App */
+/** Отправляет ТЕСТОВУЮ СТРОКУ боту БЕЗ закрытия окна */
 function submitResults() {
-    console.log("Функция submitResults вызвана.");
+    console.log("--- Вызвана функция submitResults ---");
 
-    // Проверяем наличие объекта tg и метода sendData перед использованием
-    if (!tg || typeof tg.sendData !== 'function') {
-        console.error("Объект tg или метод tg.sendData недоступен!");
-        alert("Ошибка: Не удается связаться с Telegram API. Попробуйте перезапустить.");
-        return;
+    // 1. Проверяем наличие Telegram API
+    if (!window.Telegram || !window.Telegram.WebApp) {
+        console.error("Критическая ошибка: объект window.Telegram.WebApp не найден!");
+        alert("Ошибка: Не удается получить доступ к API Telegram. Убедитесь, что приложение запущено из Telegram.");
+        return; // Прерываем выполнение
     }
+    const tg = window.Telegram.WebApp;
+    console.log("Объект tg найден:", tg); // Выводим сам объект
 
-    console.log("Объект tg найден, метод sendData доступен.");
-    const dataToSend = {
-        action: 'submit_acceptance', // Идентификатор для бота
-        defects: defectsList // Массив собранных дефектов
-    };
-
-    let dataJsonString = '';
-    try {
-        dataJsonString = JSON.stringify(dataToSend);
-        console.log('Данные для отправки (JSON):', dataJsonString);
-        if (dataJsonString.length > 4000) {
-             console.warn("Внимание: Размер отправляемых данных близок к лимиту Telegram.");
-        }
-    } catch (stringifyError) {
-        console.error("Ошибка при преобразовании данных в JSON:", stringifyError, dataToSend);
-        alert("Ошибка подготовки данных для отправки.");
-        return;
+    // 2. Проверяем наличие метода sendData
+    if (typeof tg.sendData !== 'function') {
+        console.error("Критическая ошибка: метод tg.sendData не является функцией!");
+        alert("Ошибка: Метод отправки данных недоступен в текущей версии API.");
+        return; // Прерываем выполнение
     }
+    console.log("Метод tg.sendData найден.");
+
+    // 3. Формируем уникальную тестовую строку
+    const testString = "MINIAPP_DATA_SENT_" + Date.now(); // Добавляем время для уникальности
 
     try {
-        // --- ДОБАВЛЕННЫЕ ЛОГИ ---
-        console.log("Проверка объекта tg непосредственно перед отправкой:", tg);
-        console.log("Проверка типа tg.sendData:", typeof tg.sendData);
-        // --- КОНЕЦ ДОБАВЛЕННЫХ ЛОГОВ ---
+        // 4. Пытаемся отправить тестовую строку
+        console.log("Попытка отправить тестовую строку:", testString);
+        tg.sendData(testString);
+        // Если мы дошли сюда, вызов sendData прошел без немедленной ошибки JS
+        console.log("Команда tg.sendData(testString) выполнена (без немедленной ошибки).");
 
-        // Отправляем данные боту
-        tg.sendData(dataJsonString); // Используем полный JSON объект
-        console.log("sendData вызвана. Попытка явного закрытия tg.close()...");
-        tg.close(); // Явный вызов закрытия
+        // !!! ВАЖНО: Мы НЕ вызываем tg.close() в этом тесте !!!
+        // Это позволит увидеть, доходит ли sendData сама по себе.
+
+        // Сообщаем пользователю, что попытка была сделана
+        alert("Попытка отправить данные выполнена. Пожалуйста, проверьте чат с ботом. Окно НЕ будет закрыто автоматически в этом тесте.");
+
     } catch (error) {
-        console.error("Ошибка при вызове tg.sendData или tg.close:", error);
-        if (!error.message || !error.message.toLowerCase().includes("close")) {
-             alert("Не удалось отправить результаты. Возможно, вы используете приложение не через Telegram?");
-        }
+        // Ловим ошибки, которые могли возникнуть при вызове sendData
+        console.error("!!! Ошибка непосредственно при вызове tg.sendData:", error);
+        alert("Произошла ошибка JavaScript при попытке отправить данные: " + error.message);
     }
+    console.log("--- Функция submitResults завершена ---");
 }
 
 

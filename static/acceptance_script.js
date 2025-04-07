@@ -14,7 +14,7 @@ const roomChecklistItems = [
 
 // Элементы для проверки в ванной
 const bathroomChecklistItems = [
-    { id: 'door', question: 'Есть ли повреждения на двери в ванную?', instruction: 'См. инструкцию для межкомнатной двери.' },
+    { id: 'door_bath', question: 'Есть ли повреждения на двери в ванную?', instruction: 'См. инструкцию для межкомнатной двери.' }, // Используем _bath для уникальности id
     { id: 'walls_floor_bath', question: 'Есть ли дефекты плитки (стены/пол)?', instruction: 'Проверьте плитку на сколы, трещины, пустоты под плиткой (простукиванием). Оцените качество затирки швов.' },
     { id: 'ceiling_bath', question: 'Есть ли дефекты на потолке?', instruction: 'См. инструкцию для потолка в комнате.' },
     { id: 'plumbing', question: 'Работает ли сантехника? Есть ли подтеки?', instruction: 'Проверьте работу смесителей, душа, унитаза (слив/набор воды). Осмотрите все соединения на предмет подтеков. Проверьте наличие и работу полотенцесушителя.' },
@@ -35,17 +35,19 @@ const corridorChecklistItems = [
 let currentScreen = 'welcome-screen';
 let numberOfRooms = 1;
 let checklist = []; // Полная структура чек-листа для этой квартиры
-let currentRoomIndex = -1; // Начинаем до комнат
-let currentItemIndex = -1; // Начинаем до элементов
-let defectsList = []; // Массив для записи дефектов
+let currentRoomIndex = -1; // Индекс текущей комнаты в `checklist`
+let currentItemIndex = -1; // Индекс текущего элемента в `checklist[currentRoomIndex].items`
+let defectsList = []; // Массив для записи дефектов { room: '...', item: '...', question: '...' }
 
 // --- Получение ссылок на элементы DOM ---
+// Экраны
 const screens = {
     welcome: document.getElementById('welcome-screen'),
     roomCount: document.getElementById('room-count-screen'),
     checklist: document.getElementById('checklist-screen'),
     completion: document.getElementById('completion-screen')
 };
+// Кнопки и элементы управления
 const startButton = document.getElementById('start-button');
 const roomCountInput = document.getElementById('room-count-input');
 const confirmRoomsButton = document.getElementById('confirm-rooms-button');
@@ -56,6 +58,7 @@ const okButton = document.getElementById('ok-button');
 const defectButton = document.getElementById('defect-button');
 const finishButton = document.getElementById('finish-button');
 const progressIndicator = document.getElementById('progress-indicator');
+// Элементы экрана завершения
 const summaryList = document.getElementById('summary-list');
 const noDefectsMessage = document.getElementById('no-defects-message');
 
@@ -65,171 +68,234 @@ const noDefectsMessage = document.getElementById('no-defects-message');
 /** Показывает экран по ID, скрывая остальные */
 function showScreen(screenId) {
     for (const key in screens) {
-        screens[key].classList.remove('active');
+        if (screens[key]) { // Проверка на случай ошибки получения элемента
+             screens[key].classList.remove('active');
+        }
     }
-    screens[screenId].classList.add('active');
-    currentScreen = screenId;
-    window.scrollTo(0, 0); // Прокрутка вверх при смене экрана
+    if (screens[screenId]) {
+        screens[screenId].classList.add('active');
+        currentScreen = screenId;
+        window.scrollTo(0, 0); // Прокрутка вверх
+    } else {
+        console.error(`Экран с ID "${screenId}" не найден!`);
+    }
 }
 
 /** Генерирует полный чек-лист на основе числа комнат */
 function generateFullChecklist() {
     checklist = [];
+    // Добавляем жилые комнаты
     for (let i = 0; i < numberOfRooms; i++) {
-        checklist.push({ name: `Комната ${i + 1}`, items: [...roomChecklistItems] });
+        // Клонируем массив объектов, чтобы избежать ссылочной зависимости
+        const roomItems = roomChecklistItems.map(item => ({ ...item }));
+        checklist.push({ name: `Комната ${i + 1}`, items: roomItems });
     }
-    checklist.push({ name: 'Ванная комната', items: [...bathroomChecklistItems] });
-    checklist.push({ name: 'Коридор/Прихожая', items: [...corridorChecklistItems] });
+    // Добавляем ванную и коридор (также клонируем)
+    checklist.push({ name: 'Ванная комната', items: bathroomChecklistItems.map(item => ({ ...item })) });
+    checklist.push({ name: 'Коридор/Прихожая', items: corridorChecklistItems.map(item => ({ ...item })) });
     console.log("Сгенерированный чек-лист:", checklist);
 }
 
 /** Отображает текущий вопрос и инструкцию чек-листа */
 function displayCurrentCheckItem() {
+    // Проверка валидности индексов
     if (currentRoomIndex < 0 || currentRoomIndex >= checklist.length) {
-        console.error("Неверный индекс комнаты");
-        return; // Или перейти к завершению
+        console.error("Неверный индекс комнаты:", currentRoomIndex);
+        showCompletionScreen(); // Переходим к завершению при ошибке индекса
+        return;
     }
     const room = checklist[currentRoomIndex];
     if (currentItemIndex < 0 || currentItemIndex >= room.items.length) {
-        console.error("Неверный индекс элемента");
-        return; // Или перейти к следующей комнате
+        console.error("Неверный индекс элемента:", currentItemIndex, "в комнате", room.name);
+        // Пытаемся перейти к следующей комнате или завершить
+        currentItemIndex = 0;
+        currentRoomIndex++;
+        if (currentRoomIndex >= checklist.length) {
+             showCompletionScreen();
+        } else {
+             displayCurrentCheckItem(); // Показываем первый элемент следующей комнаты
+        }
+        return;
     }
     const item = room.items[currentItemIndex];
 
+    // Обновление UI
     checklistTitle.textContent = `Проверка: ${room.name}`;
     itemQuestion.textContent = item.question;
     itemInstruction.textContent = item.instruction;
 
-    // Обновляем индикатор прогресса
+    // Обновление индикатора прогресса
     const totalItems = checklist.reduce((sum, r) => sum + r.items.length, 0);
     let completedItems = 0;
-    for(let i = 0; i < currentRoomIndex; i++){
-         completedItems += checklist[i].items.length;
+    for (let i = 0; i < currentRoomIndex; i++) {
+        completedItems += checklist[i].items.length;
     }
-    completedItems += currentItemIndex + 1;
-     progressIndicator.textContent = `Шаг ${completedItems} из ${totalItems}`;
+    completedItems += currentItemIndex + 1; // +1 так как индексы с нуля
+    progressIndicator.textContent = `Шаг ${completedItems} из ${totalItems}`;
 
-    showScreen('checklist');
+    // Убедимся, что показан экран чек-листа
+    if (currentScreen !== 'checklist') {
+        showScreen('checklist');
+    }
 }
 
 /** Переходит к следующему пункту чек-листа или к завершению */
 function nextCheckItem() {
+    // Проверяем, есть ли текущая комната в сгенерированном списке
+    if (!checklist[currentRoomIndex]) {
+         console.error("Ошибка: Попытка перейти к следующему элементу в несуществующей комнате.");
+         showCompletionScreen(); // Переходим к завершению
+         return;
+    }
     const currentRoom = checklist[currentRoomIndex];
+
     if (currentItemIndex < currentRoom.items.length - 1) {
-        // Переход к следующему элементу в текущей комнате
+        // Есть еще элементы в этой комнате
         currentItemIndex++;
     } else {
-        // Переход к следующей комнате
-        currentItemIndex = 0;
-        currentRoomIndex++;
-        // Проверка, есть ли еще комнаты
+        // Элементы в этой комнате закончились, переходим к следующей комнате
+        currentItemIndex = 0; // Сбрасываем индекс элемента
+        currentRoomIndex++;   // Увеличиваем индекс комнаты
+
+        // Проверяем, закончились ли комнаты
         if (currentRoomIndex >= checklist.length) {
-            // Все проверки завершены
-            showCompletionScreen();
-            return; // Выход из функции
+            showCompletionScreen(); // Все проверки завершены
+            return; // Важно выйти, чтобы не вызвать displayCurrentCheckItem ниже
         }
     }
-    // Отображаем следующий элемент
+    // Отображаем следующий пункт
     displayCurrentCheckItem();
 }
 
-/** Записывает обнаруженный дефект */
+/** Записывает обнаруженный дефект в массив defectsList */
 function recordDefect() {
+    // Проверяем валидность индексов перед записью
+    if (!checklist[currentRoomIndex] || !checklist[currentRoomIndex].items[currentItemIndex]) {
+         console.error("Ошибка записи дефекта: Неверный индекс комнаты или элемента.");
+         return;
+    }
     const room = checklist[currentRoomIndex];
     const item = room.items[currentItemIndex];
     const defect = {
         room: room.name,
         item: item.id, // Используем id для краткости
         question: item.question // Сохраняем вопрос для понятности отчета
-        // Можно добавить поле для комментария пользователя, если реализовать ввод
-        // comment: prompt("Опишите дефект (необязательно):") || "Обнаружен дефект"
     };
     defectsList.push(defect);
     console.log("Записан дефект:", defect);
-    console.log("Текущий список дефектов:", defectsList);
 }
 
-/** Показывает экран завершения и превью дефектов */
+/** Показывает экран завершения и превью списка дефектов */
 function showCompletionScreen() {
-     summaryList.innerHTML = ''; // Очищаем старый список
+     // Очищаем предыдущий список в превью
+     summaryList.innerHTML = '';
      if (defectsList.length > 0) {
+          // Показываем список дефектов
           noDefectsMessage.style.display = 'none';
-          summaryList.style.display = 'block';
+          summaryList.style.display = 'block'; // Убедимся, что список виден
           defectsList.forEach(defect => {
                const li = document.createElement('li');
-               li.textContent = `${defect.room} - ${defect.question}`; // Показываем понятное описание
+               // Отображаем Room - Question для лучшей читаемости
+               li.textContent = `${defect.room} - ${defect.question}`;
                summaryList.appendChild(li);
           });
      } else {
+          // Показываем сообщение об отсутствии дефектов
           noDefectsMessage.style.display = 'block';
-          summaryList.style.display = 'none';
+          summaryList.style.display = 'none'; // Скрываем пустой ul
      }
+     // Показываем экран завершения
      showScreen('completion');
 }
 
 
-/** Отправляет список дефектов боту */
+/** Отправляет список дефектов боту и пытается закрыть Mini App */
 function submitResults() {
     console.log("Отправка результатов боту...");
     const dataToSend = {
-        action: 'submit_acceptance', // Уникальный идентификатор для этого приложения
-        defects: defectsList
+        action: 'submit_acceptance', // Идентификатор для бота
+        defects: defectsList // Массив собранных дефектов
     };
     try {
+        // Отправляем данные боту в виде JSON-строки
         tg.sendData(JSON.stringify(dataToSend));
-        // Mini App обычно закрывается после sendData
+        // sendData ДОЛЖНА автоматически закрывать Mini App.
+        // Добавляем явный вызов close() на случай, если в какой-то среде это не сработает.
+        console.log("sendData вызвана. Попытка явного закрытия tg.close()...");
+        tg.close(); // Явный вызов закрытия
     } catch (error) {
-        console.error("Ошибка при вызове tg.sendData:", error);
-        alert("Не удалось отправить результаты. Возможно, вы используете приложение не через Telegram?");
+        console.error("Ошибка при вызове tg.sendData или tg.close:", error);
+        // Показываем alert только если ошибка не связана с методом close,
+        // т.к. ошибка close после успешной sendData может быть нормальной в некоторых клиентах.
+        if (!error.message || !error.message.toLowerCase().includes("close")) {
+             alert("Не удалось отправить результаты. Возможно, вы используете приложение не через Telegram?");
+        }
     }
 }
 
 
 // --- Инициализация и обработчики событий ---
 
-// Кнопка "Поехали!" на стартовом экране
-startButton.addEventListener('click', () => {
-    showScreen('roomCount');
-});
-
-// Кнопка "Далее" после ввода числа комнат
-confirmRoomsButton.addEventListener('click', () => {
-    numberOfRooms = parseInt(roomCountInput.value) || 0;
-    if (numberOfRooms < 0) numberOfRooms = 0; // Не позволяем отрицательное число
-    generateFullChecklist();
-    // Начинаем проверку с первой комнаты (индекс 0) и первого элемента (индекс 0)
-    currentRoomIndex = 0;
-    currentItemIndex = 0;
-    defectsList = []; // Очищаем список дефектов перед новым прогоном
-    displayCurrentCheckItem();
-});
-
-// Кнопка "Всё норм" в чек-листе
-okButton.addEventListener('click', () => {
-    // Просто переходим к следующему пункту
-    nextCheckItem();
-});
-
-// Кнопка "Косяк!" в чек-листе
-defectButton.addEventListener('click', () => {
-    recordDefect(); // Записываем дефект
-    nextCheckItem(); // Переходим к следующему пункту
-});
-
-// Кнопка "Завершить и получить список" на экране завершения
-finishButton.addEventListener('click', () => {
-    submitResults();
-});
-
-// Инициализация при загрузке
+// Убедимся, что все элементы существуют перед добавлением слушателей
 document.addEventListener('DOMContentLoaded', () => {
-    tg.ready(); // Сообщаем Telegram, что Mini App готово
-    showScreen('welcome'); // Показываем первый экран
+    // Проверяем наличие всех ключевых элементов
+    if (!tg) {
+         console.error("Объект Telegram WebApp (tg) не найден!");
+         // Можно показать сообщение об ошибке пользователю
+         // document.body.innerHTML = '<p style="color: red; padding: 20px;">Ошибка: Не удалось инициализировать приложение Telegram.</p>';
+         // return;
+    } else {
+        tg.ready(); // Сообщаем Telegram, что Mini App готово
+    }
+
+    if (startButton) {
+        startButton.addEventListener('click', () => {
+            showScreen('roomCount');
+        });
+    }
+
+    if (confirmRoomsButton) {
+        confirmRoomsButton.addEventListener('click', () => {
+            numberOfRooms = parseInt(roomCountInput.value) || 0;
+            if (numberOfRooms < 0) numberOfRooms = 0;
+            generateFullChecklist();
+            // Начинаем проверку
+            currentRoomIndex = 0;
+            currentItemIndex = 0;
+            defectsList = []; // Очищаем старые дефекты
+            displayCurrentCheckItem(); // Показываем первый пункт
+        });
+    }
+
+    if (okButton) {
+        okButton.addEventListener('click', () => {
+            nextCheckItem(); // Просто переходим дальше
+        });
+    }
+
+    if (defectButton) {
+        defectButton.addEventListener('click', () => {
+            recordDefect(); // Записываем дефект
+            nextCheckItem(); // Переходим дальше
+        });
+    }
+
+    if (finishButton) {
+        finishButton.addEventListener('click', () => {
+            submitResults(); // Отправляем результаты
+        });
+    }
+
+    // Показываем начальный экран
+    showScreen('welcome');
 });
 
-// Обработка изменения темы Telegram (опционально)
-tg.onEvent('themeChanged', function() {
-  console.log('Тема Telegram изменена:', tg.themeParams);
-  document.body.style.backgroundColor = tg.themeParams.bg_color || '#ffffff';
-  document.body.style.color = tg.themeParams.text_color || '#000000';
-});
+// Обработка изменения темы Telegram
+if (tg) {
+    tg.onEvent('themeChanged', function() {
+      console.log('Тема Telegram изменена:', tg.themeParams);
+      // Применяем стили темы к body
+      document.body.style.backgroundColor = tg.themeParams.bg_color || '#ffffff';
+      document.body.style.color = tg.themeParams.text_color || '#000000';
+    });
+}

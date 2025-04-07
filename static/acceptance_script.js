@@ -211,14 +211,38 @@ function showCompletionScreen() {
 
 /** Отправляет список дефектов боту и пытается закрыть Mini App */
 function submitResults() {
-    console.log("Отправка результатов боту...");
+    console.log("Функция submitResults вызвана."); // Убедимся, что функция вызывается
+
+    // Проверяем наличие объекта tg и метода sendData перед использованием
+    if (!tg || typeof tg.sendData !== 'function') {
+        console.error("Объект tg или метод tg.sendData недоступен!");
+        alert("Ошибка: Не удается связаться с Telegram API. Попробуйте перезапустить.");
+        return; // Прерываем выполнение
+    }
+
+    console.log("Объект tg найден, метод sendData доступен.");
     const dataToSend = {
         action: 'submit_acceptance', // Идентификатор для бота
         defects: defectsList // Массив собранных дефектов
     };
+
+    let dataJsonString = '';
     try {
-        // Отправляем данные боту в виде JSON-строки
-        tg.sendData(JSON.stringify(dataToSend));
+        dataJsonString = JSON.stringify(dataToSend);
+        console.log('Данные для отправки (JSON):', dataJsonString); // Выводим строку JSON
+        // Проверка на слишком большие данные (лимит Telegram около 4096 байт)
+        if (dataJsonString.length > 4000) {
+             console.warn("Внимание: Размер отправляемых данных близок к лимиту Telegram.");
+        }
+    } catch (stringifyError) {
+        console.error("Ошибка при преобразовании данных в JSON:", stringifyError, dataToSend);
+        alert("Ошибка подготовки данных для отправки.");
+        return; // Прерываем выполнение
+    }
+
+    try {
+        // Отправляем данные боту
+        tg.sendData(dataJsonString);
         // sendData ДОЛЖНА автоматически закрывать Mini App.
         // Добавляем явный вызов close() на случай, если в какой-то среде это не сработает.
         console.log("sendData вызвана. Попытка явного закрытия tg.close()...");

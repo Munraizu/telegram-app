@@ -284,7 +284,7 @@ function displayApartments(apartments) {
         const disclaimer = document.createElement('p');
         disclaimer.className = 'disclaimer';
         // Ссылка в дисклеймере - можно сделать ее динамической из таблицы, если нужно
-        disclaimer.innerHTML = 'Для получения актуальной информации<br>по предложениям зайдите на <a href="https://pik.ru" target="_blank" rel="noopener noreferrer">pik.ru</a>.';
+        disclaimer.innerHTML = 'Для получения актуальной информации<br>по предложениям зайдите на <a href="https://ugmkstroy.ru" target="_blank" rel="noopener noreferrer">pik.ru</a>.';
         card.appendChild(disclaimer);
 
         // 6. Кнопка "Хочу тут жить" (ссылка на внешний сайт)

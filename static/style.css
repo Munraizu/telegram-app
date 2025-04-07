@@ -1,9 +1,11 @@
 body {
-    font-family: sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     margin: 0;
     padding: 15px;
     background-color: var(--tg-theme-bg-color, #ffffff); /* Используем цвета темы Telegram */
     color: var(--tg-theme-text-color, #000000);
+    /* Добавим немного межстрочного интервала для читаемости */
+    line-height: 1.4;
 }
 
 .container {
@@ -15,6 +17,7 @@ h1 {
     text-align: center;
     color: var(--tg-theme-text-color, #000000);
     margin-bottom: 20px;
+    font-size: 1.5em;
 }
 
 .form-group {
@@ -25,92 +28,198 @@ label {
     display: block;
     margin-bottom: 5px;
     font-weight: bold;
+    font-size: 0.9em;
 }
 
 input[type="number"], select {
     width: 100%;
-    padding: 10px;
+    padding: 12px; /* Увеличим немного */
     border: 1px solid var(--tg-theme-hint-color, #cccccc);
-    border-radius: 5px;
+    border-radius: 8px; /* Скруглим больше */
     box-sizing: border-box;
     background-color: var(--tg-theme-secondary-bg-color, #f8f8f8);
-     color: var(--tg-theme-text-color, #000000);
+    color: var(--tg-theme-text-color, #000000);
+    font-size: 1em;
 }
 
-button {
+/* Старая кнопка поиска */
+#search-button {
     display: block;
     width: 100%;
-    padding: 12px;
-    background-color: var(--tg-theme-button-color, #ff7a00); /* Оранжевый, как на скриншоте */
+    padding: 14px; /* Увеличим */
+    background-color: var(--tg-theme-button-color, #ff7a00); /* Оранжевый */
     color: var(--tg-theme-button-text-color, #ffffff);
     border: none;
-    border-radius: 8px;
-    font-size: 16px;
+    border-radius: 10px; /* Скруглим больше */
+    font-size: 1.1em; /* Сделаем крупнее */
+    font-weight: bold;
     cursor: pointer;
     margin-top: 20px;
+    transition: background-color 0.2s ease; /* Плавный ховер */
 }
 
-button:hover {
+#search-button:hover {
     opacity: 0.9;
+}
+#search-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
 }
 
 .results-container {
     margin-top: 30px;
+    position: relative; /* Для возможного позиционирования элементов внутри */
 }
 
+/* Стили для НОВОЙ карточки квартиры */
 .apartment-card {
-    border: 1px solid var(--tg-theme-hint-color, #eee);
-    border-radius: 8px;
-    margin-bottom: 15px;
+    border: none; /* Убираем рамку */
+    border-radius: 12px; /* Небольшое скругление */
+    margin-bottom: 20px;
     padding: 15px;
     background-color: var(--tg-theme-secondary-bg-color, #fff);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    /* Стили для базовой карусели (показывать по одному) */
+    /* box-shadow: 0 2px 8px rgba(0,0,0,0.1); */ /* Можно добавить тень, если нужно */
     display: none; /* Скрыты по умолчанию */
+    text-align: left; /* Выравнивание по левому краю внутри карточки */
 }
 
 .apartment-card.active {
     display: block; /* Показываем активный слайд */
 }
 
-
 .apartment-card img {
     max-width: 100%;
     height: auto;
-    border-radius: 5px;
-    margin-bottom: 10px;
+    border-radius: 8px; /* Скругляем изображение */
+    margin-bottom: 15px;
+    display: block; /* Убираем лишние отступы под картинкой */
 }
 
-.apartment-card h3 {
+.apartment-title {
+    font-size: 1.8em; /* Крупный заголовок */
+    font-weight: bold;
     margin-top: 0;
     margin-bottom: 5px;
+    line-height: 1.2;
+}
+
+.apartment-price {
     font-size: 1.1em;
-}
-
-.apartment-card p {
-    margin: 5px 0;
     color: var(--tg-theme-hint-color, #555);
+    margin-bottom: 20px;
 }
 
-.carousel-controls {
+/* Секция с деталями */
+.details-section {
+    background-color: var(--tg-theme-bg-color, #f9f9f9); /* Немного другой фон */
+    border-radius: 10px;
+    padding: 10px 15px;
+    margin-bottom: 20px;
+}
+
+.detail-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0; /* Вертикальные отступы внутри строки */
+    border-bottom: 1px solid var(--tg-theme-hint-color, #eee);
+    font-size: 1em;
+}
+.detail-row:last-child {
+    border-bottom: none; /* Убираем рамку у последней строки */
+}
+
+.detail-row .icon {
+    font-size: 1.2em;
+    margin-right: 10px;
+    color: var(--tg-theme-button-color, #ff7a00); /* Цвет иконки */
+    flex-shrink: 0; /* Не сжимать иконку */
+}
+.detail-row .label {
+    color: var(--tg-theme-hint-color, #555); /* Цвет метки */
+    flex-grow: 1; /* Занимает доступное пространство */
+    text-align: left;
+    margin-right: 10px;
+}
+.detail-row .value {
+    font-weight: 500; /* Полужирное значение */
+    text-align: right;
+    flex-shrink: 0; /* Не сжимать значение */
+}
+
+/* Дисклеймер */
+.disclaimer {
+    font-size: 0.85em;
+    color: var(--tg-theme-hint-color, #888);
     text-align: center;
-    margin-top: 10px;
-    display: none; /* Скрыты, пока нет результатов */
+    margin-top: 15px;
+    margin-bottom: 20px;
+    line-height: 1.3;
+}
+.disclaimer a {
+    color: var(--tg-theme-link-color, #007bff);
+    text-decoration: none;
+}
+.disclaimer a:hover {
+    text-decoration: underline;
 }
 
-.carousel-controls button {
-    background-color: var(--tg-theme-button-color, #007bff);
+
+/* Кнопка "Хочу тут жить" (ссылка) */
+a.main-action-button {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    background-color: var(--tg-theme-button-color, #ff7a00); /* Основной цвет */
     color: var(--tg-theme-button-text-color, #ffffff);
     border: none;
-    padding: 8px 15px;
-    margin: 0 5px;
-    border-radius: 5px;
+    border-radius: 10px;
+    font-size: 1.1em;
+    font-weight: bold;
     cursor: pointer;
-    width: auto; /* Убираем 100% ширину для кнопок навигации */
-    display: inline-block; /* Размещаем в строку */
+    text-align: center;
+    text-decoration: none;
+    margin-top: 15px;
+    transition: background-color 0.2s ease;
+}
+a.main-action-button:hover {
+    opacity: 0.9;
+    color: var(--tg-theme-button-text-color, #ffffff); /* Убедимся, что цвет текста при ховере не меняется */
 }
 
-.carousel-controls button:disabled {
-    background-color: #cccccc;
+/* Кнопка "Следующая квартира" */
+button.next-button {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    background-color: var(--tg-theme-secondary-bg-color, #e0e0e0); /* Серый фон */
+    color: var(--tg-theme-text-color, #000000); /* Темный текст */
+    border: 1px solid var(--tg-theme-hint-color, #cccccc); /* Тонкая рамка */
+    border-radius: 10px;
+    font-size: 1.1em;
+    font-weight: 500; /* Не такой жирный, как основная кнопка */
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background-color 0.2s ease;
+}
+button.next-button:hover {
+    background-color: #d5d5d5; /* Чуть темнее при ховере */
+}
+button.next-button:disabled {
+    background-color: #f5f5f5; /* Светлее для неактивной */
+    color: #aaaaaa;
     cursor: not-allowed;
+    border-color: #eeeeee;
+}
+
+/* Стили для сообщений загрузки/нет результатов */
+#loading-message, #no-results-message {
+    text-align: center;
+    padding: 20px;
+    color: var(--tg-theme-hint-color, #888);
+}
+
+/* Удаляем старые стили карусели, если они еще есть */
+.carousel-controls {
+    display: none;
 }

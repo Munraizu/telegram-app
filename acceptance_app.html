@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Приемка квартиры</title>
+    <link rel="stylesheet" href="acceptance_style.css"> <script src="https://telegram.org/js/telegram-web-app.js"></script> </head>
+<body>
+    <div class="app-container">
+
+        <div id="welcome-screen" class="screen active">
+            <h1>Приёмка квартиры — это не сложно!</h1>
+            <p>👋 Привет!</p>
+            <p>Это бесплатное приложение для самостоятельной приёмки квартиры в новостройке.</p>
+            <p>Оно поможет вам проверить качество всех важных элементов отделки вашей новой квартиры и подготовить список недостатков для акта приёмки. Останется только его подписать и вручить застройщику.</p>
+            <p>Работа с приложением простая – это прохождение чек-листа в несколько десятков пунктов.</p>
+            <p>Вы точно справитесь!</p>
+            <button id="start-button" class="app-button primary">Поехали!</button>
+        </div>
+
+        <div id="room-count-screen" class="screen">
+            <h2>Сколько комнат в квартире?</h2>
+            <p>(Имеются в виду жилые комнаты/спальни, не считая кухню, ванную, коридор)</p>
+            <div class="input-group">
+                <label for="room-count-input">Количество комнат:</label>
+                <input type="number" id="room-count-input" min="0" value="1">
+            </div>
+            <button id="confirm-rooms-button" class="app-button primary">Далее</button>
+        </div>
+
+        <div id="checklist-screen" class="screen">
+            <h2 id="checklist-title">Проверка: ...</h2>
+            <div id="checklist-item-container">
+                <p id="item-question">Вопрос по элементу...</p>
+                <p id="item-instruction" class="instruction">Инструкция по проверке...</p>
+            </div>
+            <div class="checklist-buttons">
+                <button id="defect-button" class="app-button danger">Косяк!</button>
+                <button id="ok-button" class="app-button success">Всё норм</button>
+            </div>
+             <div id="progress-indicator"></div>
+        </div>
+
+        <div id="completion-screen" class="screen">
+            <h2>Проверка завершена!</h2>
+            <p>Вы проверили все основные пункты.</p>
+            <p>Нажмите кнопку ниже, чтобы получить список обнаруженных недостатков в чате с ботом.</p>
+            <button id="finish-button" class="app-button primary">Завершить и получить список</button>
+            <div id="summary-preview" class="summary">
+                 <h3>Предварительный список недостатков:</h3>
+                 <ul id="summary-list"></ul>
+                 <p id="no-defects-message" style="display: none;">Недостатков не обнаружено. Отлично!</p>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="acceptance_script.js"></script> </body>
+</html>
